@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "my-app_1",
-    "slug": "my-app_1",
+    "name": "UltiMet",
+    "slug": "UltiMet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,16 +12,43 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.shubh20.UltiMet"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO"
+      ],
+      "package": "com.shubh20.UltiMet"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow UltiMet to access your camera",
+          "microphonePermission": "Allow UltiMet to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "90c6ca9b-45d8-491b-8052-fbbfaae6a56d"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/90c6ca9b-45d8-491b-8052-fbbfaae6a56d"
     }
   }
 }
