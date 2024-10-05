@@ -17,7 +17,7 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState({ value: '', error: '' });
   const API_URL = 'http://13.50.183.255:9003/user-service/auth/login';
 
-  const [data, setData] = useState([]);
+
 
   useEffect(() => {
    
@@ -26,14 +26,12 @@ export default function LoginScreen({ navigation }) {
   const fetchData = async () => {
     try {
       const response = await loginuser(Number,password);
-      console.log("resposne---",response)
       if(response.data.status===200){
-        console.log("resposne---",response.status)
-   
-      setData(response.data.response.roleDto.name);
+        console.log("resposne-2--",response.data.response.token)
+        console.log("resposne-3--",response.data.response.roleDto.id)
       handleRoleSession(response.data.response.roleDto.name)
-      handleTokenSession(response.data.response.token)
       handleIdSession(response.data.response.roleDto.id)
+      handleTokenSession(response.data.response.token)
       if(response.data.response.roleDto.name=="WORKER"){
         navigation.reset({
           index: 0,
@@ -50,105 +48,10 @@ export default function LoginScreen({ navigation }) {
       console.error('Error fetching data:', error);
     }
   };
-  // const handleLogin = async () => {
-  //   try {
-  //     const response = await fetch('http://13.50.183.255:9003/user-service/auth/login', { // Replace with your API endpoint
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json', // Specify the content type
-  //       },
-  //       body: JSON.stringify({
-  //         "username": "9993465963",
-  //         "password": "test@123"
-  //     }),
-  //     });
-
-  //     // Check if the response is ok
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok ' + response.statusText);
-  //     }
-
-  //     const data = await response.json(); // Parse JSON data from the response
-
-  //     // Handle success or error messages
-  //     if (data.success) {
-  //       setMessage('Login successful!'); // Display success message
-  //     } else {
-  //       setMessage(data.message || 'Login failed.'); // Display error message
-  //     }
-  //   } catch (error) {
-  //     setMessage('Error: ' + error.message); // Display any errors
-  //   }
-  // };
 
   const onLoginPressed = async () => {
-    // const url = 'http://127.0.0:9000/api/user-service/auth/login'; // for Android emulator
-    // const url = 'http://localhost:9000/api/user-service/auth/login'; // for iOS simulator
-    // const url = 'http://110.224.189.121:9000/api/user-service/auth/login'; // for physical devices
+    fetchData();
 
-    // const data = {
-    //   username: Number.value, // Use the phone number from the input
-    //   password: password.value, // Use the password as the password
-    // };
-
-    // try {
-    //   const response = await fetch(url, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Network response was not ok');
-    //   }
-
-    //   const responseData = await response.json();
-    //   console.log('Success:', responseData);
-
-      // Navigate to the Dashboard only if login is successful
-      //Make this one condition after adding API
-  
-     
-      fetchData();
-      // handleLogin();
-    
-     
-// console.log(data+"---main")
-//       if(+(Number.value)===12345){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'AdminDashboard' }],
-//         });
-//         handleSaveSession("admin")
-//       }
-//       else if(+(Number.value)===11111){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'AdminDashboard' }],
-//         });
-//         handleSaveSession("Manager")
-//       }
-//       else if(+(Number.value)===22222){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'WorkerDashboard' }],
-//         });
-//         handleSaveSession("worker")
-//       }
-
-//       else{
-//         showErrorMessage();
-//       }
- 
-    // } catch (error) {
-    //   console.error('Error:', error);
-    //   // Optionally handle the error (e.g., show a notification to the user)
-    // }
   };
   const handleRoleSession = async (data) => {
     try {
@@ -158,15 +61,17 @@ export default function LoginScreen({ navigation }) {
     }
   };
   const handleTokenSession = async (data) => {
+    console.log(data,"Token")
     try {
-      await AsyncStorage.setItem('token', data);
+      await AsyncStorage.setItem('token', String(data));
     } catch (e) {
       console.error('Failed to save session data', e);
     }
   };
   const handleIdSession = async (data) => {
+    console.log(typeof (data))
     try {
-      await AsyncStorage.setItem('id', data);
+      await AsyncStorage.setItem('id', String(data));
     } catch (e) {
       console.error('Failed to save session data', e);
     }
@@ -180,15 +85,16 @@ export default function LoginScreen({ navigation }) {
       position: 'top',
     });
   };
-  console.log(data?.response?.roleDto?.name+"---main")
+
   return (
     <View style={styles.main}>
       <View style={styles.backbtn}>
       <BackButton goBack={navigation.goBack} /></View>
       <Header style={styles.mainHeader}>Welcome back</Header>
       <TextInput
-        style={styles.textbox}
-        label="Phone Number"
+        style={[styles.textbox]}
+        placeholder="Phone Number"
+        placeholderTextColor="#8093a9"
         returnKeyType="next"
         value={Number.value}
         onChangeText={(text) => setNumber({ value: text, error: '' })}
@@ -198,12 +104,13 @@ export default function LoginScreen({ navigation }) {
       />
       <TextInput
       style={styles.textbox}
-        label="Enter Password"
+      placeholder="Enter Password"
+      placeholderTextColor="#8093a9"
         returnKeyType="done"
         value={password.value}
         maxLength={40}
         onChangeText={(text) => setPassword({ value: text, error: '' })}
-        keyboardType="phone-pad"
+        keyboardType="default"
         secureTextEntry
       />
       <View style={styles.password}>
@@ -244,6 +151,7 @@ const styles = StyleSheet.create({
   textbox:{
     backgroundColor:'#243546',
     color:'white',
+    fontColor:'white'
   },
   btnColor :{
     backgroundColor: '#1a80e6',

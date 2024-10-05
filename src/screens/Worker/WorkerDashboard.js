@@ -4,31 +4,166 @@ import { FontAwesome } from '@expo/vector-icons'; // Icon library
 import { LineChart } from 'react-native-chart-kit'; // For the chart
 import { BarCodeScanner } from 'expo-barcode-scanner'; // Barcode scanner
 import Toast from 'react-native-toast-message'; // Toast message for feedback
+import {checkinAPI,checkoutAPI} from '../../service/WorkerService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function WorkerDashboard({ navigation }) {
   const [status, setStatus] = useState(''); // Check-in/check-out status
+  const [token, setToken] = useState('');
+  const [id, setId] = useState(Number);
+  const [checkInID, setCheckInID] = useState(Number);
   const [hasPermission, setHasPermission] = useState(null); // Camera permission state
   const [scanned, setScanned] = useState(false); // Scanned state
+  const [cameraActive, setCameraActive] = useState(false); // Control camera
 
   useEffect(() => {
     // Request camera permission
+       const getSessionData = async () => {
+      try {
+        const value = await AsyncStorage.getItem('token');
+        if (value !== null) {
+          console.log(value,'----value')
+          setToken(value);
+        }
+      } catch (e) {
+        console.log(e,'----error')
+        console.error('Failed to fetch session data', e);
+      }
+    };
+    getSessionData();
+    const getIDSessionData = async () => {
+      try {
+        const value = await AsyncStorage.getItem('id');
+        if (value !== null) {
+          setId(value);
+        }
+      } catch (e) {
+        console.error('Failed to fetch session data', e);
+      }
+    };
+    getIDSessionData();
     const getBarCodeScannerPermissions = async () => {
       const { status } = await BarCodeScanner.requestPermissionsAsync();
       setHasPermission(status === 'granted');
     };
+  
+  
     getBarCodeScannerPermissions();
   }, []);
 
+  const getCheckinIDSessionData = async () => {
+    try {
+      const value = await AsyncStorage.getItem('checkInID');
+      if (value !== null) {
+        setCheckInID(value);
+      }
+    } catch (e) {
+      console.error('Failed to fetch session data', e);
+    }
+  };
+  const oncheckinPressed = async () => {
+    console.log("pressed this butn")
+    checkin();
+
+  };
+  
+  const oncheckoutPressed = async () => {
+    console.log("oncheckoutPressed")
+    if (status === 'checkedIn') {
+      setStatus('checkedOut');
+    }
+    getCheckinIDSessionData();
+    if(setCheckInID!=''){
+      checkout();
+    }
+
+  };
+  const handleCheckInID = async (data) => {
+    console.log(data,"Token checkin id")
+    try {
+      await AsyncStorage.setItem('checkInID', data);
+    } catch (e) {
+      console.error('Failed to save session data', e);
+    }
+  };
+  const checkin = async () => {
+    console.log("token33",token,'--',id)
+    try {
+      const response = await checkinAPI(token,id);
+      console.log("resposne---",response)
+      if(response.data.status===200){
+        Toast.show({
+          type: 'success',
+          text1: 'Check-in Successful',
+          text2: 'Welcome to work! ✅',
+        });
+        console.log("response.data.status.response.id",response.data.status.response.id)
+        if(response.data.status.response.id && response.data.status.response.id!=''){
+          handleCheckInID(response.data.status.response.id);
+          setCheckInID(response.data.status.response.id)
+        }
+      }
+      else{
+        Toast.show({
+          type: 'error',
+          text1: 'Check-in with valid data',
+          text2: 'Error',
+        });
+        // showErrorMessage()
+      }
+
+    } catch (error) {
+      // showErrorMessage()
+      Toast.show({
+        type: 'error',
+        text1: 'Check-in with valid data',
+        text2: 'Error',
+      });
+      console.error('Error fetching data:', error);
+    }
+  };
+  const checkout = async () => {
+    console.log("token33 checkedout",token,'--',checkInID)
+    try {
+      const response = await checkoutAPI(token,checkInID);
+      console.log("resposne---",response)
+      if(response.data.status===200){
+        Toast.show({
+          type: 'success',
+          text1: 'Check-out Successful',
+          text2: 'Marked Done! ✅',
+        });
+      }
+      else{
+        Toast.show({
+          type: 'error',
+          text1: 'Check-out unsuccessfull',
+          text2: 'Error',
+        });
+        // showErrorMessage()
+      }
+
+    } catch (error) {
+      // showErrorMessage()
+      Toast.show({
+        type: 'error',
+        text1: 'Check-in with valid data',
+        text2: 'Error',
+      });
+      console.error('Error fetching data:', error);
+    }
+  };
   const handleBarCodeScanned = ({ type, data }) => {
     setScanned(true);
+    setCameraActive(false); // Turn off the camera after scanning
+
     // Simulate validation of scanned data
     if (data === 'EXPECTED_BARCODE_DATA') {
-      Toast.show({
-        type: 'success',
-        text1: 'Check-in Successful',
-        text2: 'Welcome to work! ✅',
-      });
+   
+      console.log(data,"data of barcode--")
+      oncheckinPressed();
       setStatus('checkedIn'); // Set status to checked in after successful scan
+     
     } else {
       Toast.show({
         type: 'error',
@@ -40,8 +175,8 @@ export default function WorkerDashboard({ navigation }) {
 
   const handleCheckIn = () => {
     if (status === '' && !scanned) {
-      // Barcode scanning logic
-      setScanned(false);
+      // Activate the camera when check-in is pressed
+      setCameraActive(true);
     } else if (status === 'checkedIn') {
       setStatus('checkedOut');
     }
@@ -65,19 +200,19 @@ export default function WorkerDashboard({ navigation }) {
   if (hasPermission === false) {
     return <Text>No access to camera</Text>;
   }
-
+console.log("token",token,'--',id);
   return (
     <View style={styles.container}>
       {/* Attendance info and chart section */}
       <View style={styles.attendanceCard}>
         <Text style={styles.attendanceText}>Attendance</Text>
         <Text style={styles.attendancePercentage}>100%</Text>
-        <Text style={styles.attendanceSubtitle}>Last 5 Months -1%</Text>
+        <Text style={styles.attendanceSubtitle}>Last 5 Months <Text style={styles.attendanceSubtitle_1}>-1%</Text></Text>
 
         {/* Line chart for attendance */}
         <LineChart
           data={attendanceData}
-          width={Dimensions.get('window').width - 40} // Chart width (full width minus some padding)
+          width={Dimensions.get('window').width - 80} // Chart width (full width minus some padding)
           height={220}
           chartConfig={{
             backgroundColor: '#0F1A24',
@@ -106,18 +241,18 @@ export default function WorkerDashboard({ navigation }) {
           <Button title="Check-in" onPress={handleCheckIn} color="#007bff" />
         )}
         {status === 'checkedIn' && (
-          <Button title="Check-out" onPress={handleCheckIn} color="#007bff" />
+          <Button title="Check-out" onPress={oncheckoutPressed} color="#007bff" />
         )}
         {status === 'checkedOut' && (
           <Button title="Marked Done" disabled={true} color="#808080" />
         )}
       </View>
 
-      {/* Barcode scanner */}
-      {!scanned && status === '' && (
+      {/* Conditionally render Barcode scanner */}
+      {cameraActive && !scanned && (
         <BarCodeScanner
           onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-          style={StyleSheet.absoluteFillObject}
+          style={StyleSheet.absoluteFillObject }
         />
       )}
 
@@ -145,13 +280,17 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0F1A24',
     padding: 20,
-    paddingTop:70
+    paddingTop: 70,
   },
   attendanceCard: {
-    backgroundColor: '#121212',
+    backgroundColor: '#0F1A24',
     padding: 20,
     borderRadius: 10,
     marginBottom: 30,
+    borderWidth: 1,
+    borderColor:'#2c425c',
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
   attendanceText: {
     color: 'white',
@@ -164,12 +303,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   attendanceSubtitle: {
-    color: '#FF0000',
+    color: '#6e7c8e',
+    fontSize: 14,
+  },
+  attendanceSubtitle_1:{
+    color: '#9a4829',
     fontSize: 14,
   },
   chart: {
-    marginVertical: 10,
+    marginVertical: 20,
     borderRadius: 16,
+    left:-10
   },
   buttonContainer: {
     marginVertical: 20,

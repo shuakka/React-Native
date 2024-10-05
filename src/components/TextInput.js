@@ -11,6 +11,8 @@ export default function TextInput({ errorText, description, ...props }) {
         selectionColor={theme.colors.primary}
         underlineColor="transparent"
         mode="outlined"
+        textColor="white"
+        cursorColor ="white"
         {...props}
       />
       {description && !errorText ? (
@@ -28,6 +30,7 @@ const styles = StyleSheet.create({
   },
   input: {
     backgroundColor: theme.colors.surface,
+    color:'gray',
   },
   description: {
     fontSize: 13,
