@@ -10,7 +10,7 @@ try {
     "Number": Number
   };
     // Make the POST request to your Node.js server
-    const response=await axios.post('http://192.168.29.170:3000/api/endpoint/login',{
+    const response=await axios.post('/api/endpoint/login',{
       query: {
       "Number": Number,
       "password":password
