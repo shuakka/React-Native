@@ -1,21 +1,18 @@
 import axios from 'axios';
 
 export async function loginuser(Number,password) {
-  console.log("Data email",Number)
+  console.log("Mobile",Number)
 try {
     const requestData = {
-      headers:{
-        id_token:window.sessionStorage.getItem("id_token")
-      },
-    "Number": Number
+      // headers:{
+      //   id_token:window.sessionStorage.getItem("id_token")
+      // },
+      "username": Number,
+      "password": password
   };
+  console.log("Request", requestData)
     // Make the POST request to your Node.js server
-    const response=await axios.post('/api/endpoint/login',{
-      query: {
-      "Number": Number,
-      "password":password
-      }
-    });
+    const response=await axios.post('http://13.50.183.255:9003/user-service/auth/login', requestData);
      
         // Handle the response from the Node.js server
 

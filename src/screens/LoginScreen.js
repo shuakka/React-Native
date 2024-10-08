@@ -1,4 +1,4 @@
-import React, { useState ,useEffect} from 'react';
+import React, { useState } from 'react';
 import { TouchableOpacity, StyleSheet, View } from 'react-native';
 import { Text } from 'react-native-paper';
 import Background from '../components/Background';
@@ -7,171 +7,55 @@ import Button from '../components/Button';
 import TextInput from '../components/TextInput';
 import BackButton from '../components/BackButton';
 import { theme } from '../core/theme';
-import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
-import {loginuser} from '../service/WorkerService';
+import { loginuser } from '../service/WorkerService';
 
 export default function LoginScreen({ navigation }) {
-  const [Number, setNumber] = useState({ value: '', error: '' });
-  const [password, setPassword] = useState({ value: '', error: '' });
-  const API_URL = 'http://13.50.183.255:9003/user-service/auth/login';
-
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-   
-  }, []);
+  const [number, setNumber] = useState('');
+  const [password, setPassword] = useState('');
 
   const fetchData = async () => {
     try {
-      const response = await loginuser(Number,password);
-      console.log("resposne---",response)
-      if(response.data.status===200){
-        console.log("resposne---",response.status)
-   
-      setData(response.data.response.roleDto.name);
-      handleRoleSession(response.data.response.roleDto.name)
-      handleTokenSession(response.data.response.token)
-      handleIdSession(response.data.response.roleDto.id)
-      if(response.data.response.roleDto.name=="WORKER"){
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'WorkerDashboard' }],
-        });
-      }
-      }
-      else{
-        showErrorMessage()
-      }
+      const response = await loginuser(number, password);
+      console.log('response---', response.data);
 
+      if (response.data.status === 200) {
+        const { roleDto, token } = response.data.response;
+
+        await AsyncStorage.setItem('userFirstName', response.data.response.firstName);
+        await AsyncStorage.setItem('userLastName', response.data.response.lastName);
+        await AsyncStorage.setItem('userToken', token);
+        await AsyncStorage.setItem('userRole', roleDto.name);
+
+        if (roleDto.name === 'WORKER') {
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'WorkerDashboard' }],
+          });
+        }
+      } else {
+        showErrorMessage();
+      }
     } catch (error) {
-      showErrorMessage()
+      showErrorMessage();
       console.error('Error fetching data:', error);
     }
   };
-  // const handleLogin = async () => {
-  //   try {
-  //     const response = await fetch('http://13.50.183.255:9003/user-service/auth/login', { // Replace with your API endpoint
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json', // Specify the content type
-  //       },
-  //       body: JSON.stringify({
-  //         "username": "9993465963",
-  //         "password": "test@123"
-  //     }),
-  //     });
-
-  //     // Check if the response is ok
-  //     if (!response.ok) {
-  //       throw new Error('Network response was not ok ' + response.statusText);
-  //     }
-
-  //     const data = await response.json(); // Parse JSON data from the response
-
-  //     // Handle success or error messages
-  //     if (data.success) {
-  //       setMessage('Login successful!'); // Display success message
-  //     } else {
-  //       setMessage(data.message || 'Login failed.'); // Display error message
-  //     }
-  //   } catch (error) {
-  //     setMessage('Error: ' + error.message); // Display any errors
-  //   }
-  // };
 
   const onLoginPressed = async () => {
-    // const url = 'http://127.0.0:9000/api/user-service/auth/login'; // for Android emulator
-    // const url = 'http://localhost:9000/api/user-service/auth/login'; // for iOS simulator
-    // const url = 'http://110.224.189.121:9000/api/user-service/auth/login'; // for physical devices
-
-    // const data = {
-    //   username: Number.value, // Use the phone number from the input
-    //   password: password.value, // Use the password as the password
-    // };
-
-    // try {
-    //   const response = await fetch(url, {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify(data),
-    //   });
-
-    //   if (!response.ok) {
-    //     throw new Error('Network response was not ok');
-    //   }
-
-    //   const responseData = await response.json();
-    //   console.log('Success:', responseData);
-
-      // Navigate to the Dashboard only if login is successful
-      //Make this one condition after adding API
-  
-     
-      fetchData();
-      // handleLogin();
-    
-     
-// console.log(data+"---main")
-//       if(+(Number.value)===12345){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'AdminDashboard' }],
-//         });
-//         handleSaveSession("admin")
-//       }
-//       else if(+(Number.value)===11111){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'AdminDashboard' }],
-//         });
-//         handleSaveSession("Manager")
-//       }
-//       else if(+(Number.value)===22222){
-//         //admin
-//         navigation.reset({
-//           index: 0,
-//           routes: [{ name: 'WorkerDashboard' }],
-//         });
-//         handleSaveSession("worker")
-//       }
-
-//       else{
-//         showErrorMessage();
-//       }
- 
-    // } catch (error) {
-    //   console.error('Error:', error);
-    //   // Optionally handle the error (e.g., show a notification to the user)
-    // }
-  };
-  const handleRoleSession = async (data) => {
-    try {
-      await AsyncStorage.setItem('role', data);
-    } catch (e) {
-      console.error('Failed to save session data', e);
+    if (number.trim() === '' || password.trim() === '') {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Phone number and password are required.',
+        position: 'top',
+      });
+      return;
     }
+    fetchData();
   };
-  const handleTokenSession = async (data) => {
-    try {
-      await AsyncStorage.setItem('token', data);
-    } catch (e) {
-      console.error('Failed to save session data', e);
-    }
-  };
-  const handleIdSession = async (data) => {
-    try {
-      await AsyncStorage.setItem('id', data);
-    } catch (e) {
-      console.error('Failed to save session data', e);
-    }
-  };
-  
+
   const showErrorMessage = () => {
     Toast.show({
       type: 'error',
@@ -180,30 +64,31 @@ export default function LoginScreen({ navigation }) {
       position: 'top',
     });
   };
-  console.log(data?.response?.roleDto?.name+"---main")
+
   return (
     <View style={styles.main}>
       <View style={styles.backbtn}>
-      <BackButton goBack={navigation.goBack} /></View>
+        <BackButton goBack={navigation.goBack} />
+      </View>
       <Header style={styles.mainHeader}>Welcome back</Header>
       <TextInput
         style={styles.textbox}
         label="Phone Number"
         returnKeyType="next"
-        value={Number.value}
-        onChangeText={(text) => setNumber({ value: text, error: '' })}
+        value={number}
+        onChangeText={setNumber}
         autoCapitalize="none"
         maxLength={10}
         keyboardType="phone-pad"
       />
       <TextInput
-      style={styles.textbox}
+        style={styles.textbox}
         label="Enter Password"
         returnKeyType="done"
-        value={password.value}
+        value={password}
         maxLength={40}
-        onChangeText={(text) => setPassword({ value: text, error: '' })}
-        keyboardType="phone-pad"
+        onChangeText={setPassword}
+        keyboardType="default"
         secureTextEntry
       />
       <View style={styles.password}>
@@ -214,70 +99,51 @@ export default function LoginScreen({ navigation }) {
       <Button style={styles.btnColor} mode="contained" onPress={onLoginPressed}>
         Login
       </Button>
-      <View style={styles.row}>
-        <Text style={styles.fontColor}>New User?  Sign Up</Text>
-        <TouchableOpacity onPress={() => navigation.replace('RegisterScreen')}>
-          
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  main:{
-    backgroundColor: '#101b23',
+  main: {
+    backgroundColor: '#0F1A24',
     flex: 1,
     padding: 15,
   },
-  backbtn :{
-  left:-2
+  backbtn: {
+    left: -2,
   },
   mainHeader: {
     width: '100%',
     fontSize: 25,
     marginTop: '30%',
     fontWeight: 'bold',
-    alignItems: 'flex-start',
-    color:'#fff'
+    color: '#ffffff',
   },
-  textbox:{
-    backgroundColor:'#243546',
-    color:'white',
+  textbox: {
+    height: 30,
+    backgroundColor: '#FFFFFF',
+    color: '#000000',
+    borderColor: '#0F1A24',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 5,
   },
-  btnColor :{
+  btnColor: {
     backgroundColor: '#1a80e6',
-
-  },
-  header: {
-    width: '100%',
-    alignItems: 'flex-start',
-     color:'#fff'
+    height: 50, // Adjust height for a more professional look
+    justifyContent: 'center', // Center the text vertically
+    borderRadius: 5, // Keep rounded corners
+    marginBottom: 15,
   },
   password: {
     width: '100%',
     alignItems: 'flex-start',
     marginBottom: 24,
-    
-  },
-  row: {
-    flexDirection: 'row',
-    marginTop: 4,
   },
   forgotbtn: {
     fontSize: 16,
-    color:'#849ab1',
-    textDecorationLine: 'underline'
+    color: '#849ab1',
+    textDecorationLine: 'underline',
   },
-  link: {
-    fontWeight: 'bold',
-    color: 'blue',
-  },
-  fontColor:{
-    color : '#fff',
-    textAlign: 'center',
-    alignItems:'center',
-    top:10,
-    left:3
-  }
 });

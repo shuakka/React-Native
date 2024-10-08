@@ -1,87 +1,126 @@
-import React,{useEffect,useState} from 'react';
-import { View, Text, Image, Button, TouchableOpacity, StyleSheet,ScrollView  } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, Button, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
-export default function WorkerProfile({navigation}) {
-
+export default function WorkerProfile({ navigation }) {
   const [storedValue, setStoredValue] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [isContactVisible, setContactVisible] = useState(false);
+  const [isCompanyVisible, setCompanyVisible] = useState(false); // State for company info
+  const [status, setStatus] = useState(''); 
+
+  const handleCheckIn = () => {
+    if (status === '') {
+      // Navigate to the ScannerScreen on Check-in
+      navigation.navigate('ScannerScreen');
+    } else if (status === 'checkedIn') {
+      setStatus('checkedOut');
+      Toast.show({
+        type: 'success',
+        text1: 'Check-out Successful',
+        text2: 'Goodbye! 👋',
+      });
+    }
+  };
 
   useEffect(() => {
-    // Retrieve session data on app load
     const getSessionData = async () => {
       try {
-        const value = await AsyncStorage.getItem('role');
-        if (value !== null) {
-          setStoredValue(value);
+        const userId = await AsyncStorage.getItem('userId'); // Assuming userId is stored in AsyncStorage
+        const token = await AsyncStorage.getItem('token'); // Fetch token from AsyncStorage
+        if (userId && token) {
+          const response = await fetch(`http://13.50.183.255:9003/user-service/users/user/${userId}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await response.json();
+          if (data.status === 200) {
+            setUserData(data.response);
+          }
         }
       } catch (e) {
-        console.error('Failed to fetch session data', e);
+        console.error('Failed to fetch user data', e);
       }
     };
 
     getSessionData();
   }, []);
 
+
+
   const handleLogout = () => {
-    // Handle logout logic here
-    console.log('Logging out...');
     navigation.dispatch(
       CommonActions.reset({
         index: 0,
         routes: [{ name: 'StartScreen' }],
       })
     );
-   
+  };
+
+  const toggleContactInfo = () => {
+    setContactVisible(!isContactVisible);
+  };
+
+  const toggleCompanyInfo = () => {
+    setCompanyVisible(!isCompanyVisible);
   };
 
   return (
     <View style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-      {/* Settings Icon */}
-      <TouchableOpacity style={styles.settingsIcon}>
-        <FontAwesome name="cog" size={24} color="white" />
-      </TouchableOpacity>
-      
-      {/* Profile Image */}
-      <Image
-        source={require('../../assets/pic1.png')} // Replace with actual image link
-        style={styles.profileImage}
-      />
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <TouchableOpacity style={styles.settingsIcon}>
+          <FontAwesome name="cog" size={24} color="white" />
+        </TouchableOpacity>
 
-      {/* Name and Title */}
-      <Text style={styles.name}>Jenny Thompson</Text>
-      <Text style={styles.title}>Marketing Manager</Text>
-      <Text style={styles.location}>San Francisco, CA</Text>
+        {/* Profile Image */}
+        <Image
+          source={require('../../assets/pic1.png')} // Placeholder for profile image
+          style={styles.profileImage}
+        />
 
-      {/* Edit Button */}
-      <TouchableOpacity style={styles.editButton}>
-        <Text style={styles.editButtonText}>Edit</Text>
-      </TouchableOpacity>
+        {/* Name and Title */}
+        <Text style={styles.name}>{`${userData?.firstName || 'N/A'} ${userData?.lastName || 'N/A'}`}</Text>
+        <Text style={styles.title}>{userData?.roleDto?.name || 'N/A'}</Text>
+        <Text style={styles.location}>{userData?.employeeId || 'N/A'}</Text>
 
-      {/* Contact Information */}
-      <TouchableOpacity style={styles.listItem}>
-        <Text style={styles.listItemText}>Contact information</Text>
-        <Text style={styles.listItemSubText}>Add or update your phone number and email address</Text>
-        <FontAwesome name="chevron-right" size={18} color="white" />
-      </TouchableOpacity>
+        {/* Edit Button */}
+        <TouchableOpacity style={styles.editButton}>
+          <Text style={styles.editButtonText}>Edit</Text>
+        </TouchableOpacity>
 
-      {/* Take a Break */}
-      <TouchableOpacity style={styles.listItem}>
-        <Text style={styles.listItemText}>Company Information</Text>
-        <FontAwesome name="chevron-right" size={18} color="white" />
-      </TouchableOpacity>
-      <TouchableOpacity style={styles.listItem} onPress={handleLogout}>
-        <Text style={styles.listItemText}>Logout</Text>
-        <FontAwesome name="chevron-right" size={18} color="white" />
-      </TouchableOpacity>
-     
-      {/* Bottom Checkmark */}
-      <View style={styles.bottomCheckmark}>
-        <FontAwesome name="check-circle" size={24} color="white" />
-      </View>
+        {/* Contact Information */}
+        <TouchableOpacity style={styles.contactContainer} onPress={toggleContactInfo}>
+          <Text style={styles.contactTitle}>Contact Information</Text>
+          <FontAwesome name={isContactVisible ? 'chevron-up' : 'chevron-down'} size={18} color="white" />
+        </TouchableOpacity>
+        {isContactVisible && (
+          <View style={styles.contactDetails}>
+            <Text style={styles.contactInfo}>{`Phone: ${userData?.phone || 'N/A'}`}</Text>
+            <Text style={styles.contactInfo}>{`Email: ${userData?.email || 'N/A'}`}</Text>
+          </View>
+        )}
+
+        {/* Company Information */}
+        <TouchableOpacity style={styles.companyContainer} onPress={toggleCompanyInfo}>
+          <Text style={styles.companyTitle}>Company Information</Text>
+          <FontAwesome name={isCompanyVisible ? 'chevron-up' : 'chevron-down'} size={18} color="white" />
+        </TouchableOpacity>
+        {isCompanyVisible && (
+          <View style={styles.companyDetails}>
+            <Text style={styles.companyInfo}>{`Company Name: ${userData?.companyName || 'N/A'}`}</Text>
+            <Text style={styles.companyInfo}>{`Location: ${userData?.companyLocation || 'N/A'}`}</Text>
+            <Text style={styles.companyInfo}>{`Department: ${userData?.department || 'N/A'}`}</Text>
+          </View>
+        )}
+
+
+        {/* Bottom Checkmark */}
+        <View style={styles.bottomCheckmark}>
+          <FontAwesome name="check-circle" size={24} color="white" />
+        </View>
       </ScrollView>
       <View style={styles.bottomNav}>
         <TouchableOpacity onPress={() => navigation.navigate('WorkerDashboard')}>
@@ -94,10 +133,15 @@ export default function WorkerProfile({navigation}) {
           <FontAwesome name="user" size={24} color="white" />
         </TouchableOpacity>
       </View>
+
+      <TouchableOpacity style={styles.fab} onPress={handleCheckIn}>
+        <FontAwesome name={status === 'checkedIn' ? 'sign-out' : 'sign-in'} size={24} color="white" />
+      </TouchableOpacity>
     </View>
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -150,6 +194,54 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
+  contactContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#0F1A24',
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  contactTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  contactDetails: {
+    fontSize: 15,
+    marginTop: 10,
+    paddingLeft: 10,
+  },
+  contactInfo: {
+    color: 'white',
+    fontSize: 18, // Increased size for contact info
+    marginBottom: 5,
+  },
+  companyContainer: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#0F1A24',
+    borderRadius: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  companyTitle: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  companyDetails: {
+    fontSize: 15,
+    marginTop: 10,
+    paddingLeft: 10,
+  },
+  companyInfo: {
+    color: 'white',
+    fontSize: 18, // Increased size for company info
+    marginBottom: 5,
+  },
   listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -161,10 +253,6 @@ const styles = StyleSheet.create({
   listItemText: {
     color: 'white',
     fontSize: 18,
-  },
-  listItemSubText: {
-    color: 'gray',
-    fontSize: 14,
   },
   bottomCheckmark: {
     position: 'absolute',
@@ -184,5 +272,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     backgroundColor: '#121212',
     paddingVertical: 10,
-  }
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 80, // Adjust the distance from the bottom
+    right: 20,  // Adjust the distance from the right
+    backgroundColor: '#007bff',
+    borderRadius: 30,
+    padding: 15,
+    elevation: 5, // Shadow for Android
+  },
 });

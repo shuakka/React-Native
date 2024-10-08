@@ -1,118 +1,72 @@
-import { BarCodeScanner } from "expo-barcode-scanner";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button } from "react-native-paper";
+import { Camera } from "expo-camera";
 import Header from "../components/Header";
 
-export default function ScannerScreen({navigation}) {
+const ScannerScreen = ({ navigation }) => {
     const [hasPermission, setHasPermission] = useState(null);
     const [scanned, setScanned] = useState(false);
-  
+
     useEffect(() => {
-      (async () => {
-        const { status } = await BarCodeScanner.requestPermissionsAsync();
-        setHasPermission(status === 'granted');
-      })();
+        (async () => {
+            const { status } = await Camera.requestCameraPermissionsAsync();
+            setHasPermission(status === 'granted');
+        })();
     }, []);
-  
+
     const handleBarCodeScanned = ({ type, data }) => {
-      setScanned(true);
-      alert(`Bar code with type ${type} and data ${data} has been scanned!`);
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'AdminDashboard' }],
-      })
-    };
-  
-    const onBackPressed = () => {
+        setScanned(true);
+        alert(`Bar code with type ${type} and data ${data} has been scanned!`);
         navigation.reset({
-          index: 0,
-          routes: [{ name: 'AdminDashboard' }],
-        })
-      }
-    const renderCamera = () => {
-      return (
-        <View style={styles.cameraContainer}>
-          <BarCodeScanner
-            onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-            style={styles.camera}
-          />
-        </View>
-      );
+            index: 0,
+            routes: [{ name: 'WorkerDashboard' }],
+        });
     };
-  
+
     if (hasPermission === null) {
-      return <View />;
+        return <View />;
     }
-  
+
     if (hasPermission === false) {
-      return (
-        <View style={styles.container}>
-          <Text style={styles.text}>Camera permission not granted</Text>
-        </View>
-      );
+        return <Text>No access to camera</Text>;
     }
-  
+
     return (
-        <><View style={styles.headerContainer}>
-            <Button onPress={onBackPressed} icon={require('../assets/arrow_back.png')} />
-            <Header title="Attendance List" />
-        </View><View style={styles.container}>
-                <Text style={styles.paragraph}>Scan a barcode to start your job.</Text>
-                {renderCamera()}
-                <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => handleBarCodeScanned}
-                >
-                    <Text style={styles.buttonText}>Scan QR to Start your job</Text>
-                </TouchableOpacity>
-            </View></>
+        <View style={styles.container}>
+            <Header title="Check-In" />
+            <Camera
+                onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
+                style={styles.camera}
+            />
+            <TouchableOpacity
+                style={styles.button}
+                onPress={() => setScanned(false)}
+            >
+                <Text style={styles.buttonText}>Scan QR to Start your job</Text>
+            </TouchableOpacity>
+        </View>
     );
-  }
-  
-  const styles = StyleSheet.create({
+};
+
+const styles = StyleSheet.create({
     container: {
-      flex: 1,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 16,
-        marginTop:20,
-        marginBottom:10,
-        backgroundColor: '#fff',
-       
-      },
-    title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      marginBottom: 20,
-    },
-    paragraph: {
-      fontSize: 16,
-      marginBottom: 40,
-    },
-    cameraContainer: {
-      width: '80%',
-      aspectRatio: 1,
-      overflow: 'hidden',
-      borderRadius: 10,
-      marginBottom: 40,
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
     },
     camera: {
-      flex: 1,
+        width: "100%",
+        height: "100%",
     },
     button: {
-      backgroundColor: 'blue',
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 5,
+        backgroundColor: "#1a80e6",
+        padding: 10,
+        marginTop: 20,
     },
     buttonText: {
-      color: 'white',
-      fontSize: 16,
-      fontWeight: 'bold',
+        color: "white",
     },
-  });
+});
+
+export default ScannerScreen;
