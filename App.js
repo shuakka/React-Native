@@ -18,7 +18,9 @@ import {
   Departments
 } from './src/screens';
 import AdminDashboard from './src/screens/Admin/AdminDashboard';
+// import {AdminDashboard,AdminAttendance,AdminProfile} from './src/screens/Admin';
 import {WorkerDashboard,WorkerAttendance,WorkerProfile} from './src/screens/Worker';
+import {ManagerDashboard,ManagerAttendance,ManagerProfile} from './src/screens/Manager';
 
 import { Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -147,6 +149,9 @@ export default function App() {
           <Stack.Screen name="History" component={History} />
           <Stack.Screen name="AdminDashboard" component={MyTabs} />
           <Stack.Screen name="WorkerDashboard" component={WorkerDashboard} />
+          <Stack.Screen name="ManagerDashboard" component={ManagerDashboard} />
+          <Stack.Screen name="ManagerProfile" component={ManagerProfile} />
+          <Stack.Screen name="ManagerAttendance" component={ManagerAttendance} />
           <Stack.Screen name="WorkerProfile" component={WorkerProfile} />
           <Stack.Screen name="Timeline" component={Timeline} />
           

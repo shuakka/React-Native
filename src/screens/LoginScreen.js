@@ -27,6 +27,7 @@ export default function LoginScreen({ navigation }) {
         await AsyncStorage.setItem('userLastName', response.data.response.lastName);
         await AsyncStorage.setItem('userToken', token);
         await AsyncStorage.setItem('userRole', roleDto.name);
+        await AsyncStorage.setItem('userId', response.data.response.id);
 
         if (roleDto.name === 'WORKER') {
           navigation.reset({
@@ -34,7 +35,21 @@ export default function LoginScreen({ navigation }) {
             routes: [{ name: 'WorkerDashboard' }],
           });
         }
-      } else {
+      
+      if (roleDto.name === 'ADMIN') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'AdminDashboard' }],
+        });
+      }
+      if (roleDto.name === 'MANAGER') {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'ManagerDashboard' }],
+        });
+
+      }
+     } else {
         showErrorMessage();
       }
     } catch (error) {

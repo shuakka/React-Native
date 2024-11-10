@@ -5,7 +5,7 @@ import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Toast from 'react-native-toast-message';
 
-export default function WorkerProfile({ navigation }) {
+export default function ManagerProfile({ navigation }) {
   const [storedValue, setStoredValue] = useState(null);
   const [loading, setLoading] = useState(false);
   const [userData, setUserData] = useState(null);
@@ -89,7 +89,7 @@ export default function WorkerProfile({ navigation }) {
     }
   };
 
-  const editWorkerAPI = async () => {
+  const editManagerAPI = async () => {
     try {
       const userId = await AsyncStorage.getItem('userId'); // Assuming userId is stored in AsyncStorage
       const token = await AsyncStorage.getItem('userToken'); // Fetch token from AsyncStorage
@@ -155,7 +155,7 @@ export default function WorkerProfile({ navigation }) {
   };
 
   const handleCheckmarkClick = () => {
-    editWorkerAPI();
+    editManagerAPI();
   };
   
 
@@ -300,13 +300,13 @@ console.log("formDataformData-",formData);
         </TouchableOpacity>
       </ScrollView>
       <View style={styles.bottomNav}>
-        <TouchableOpacity onPress={() => navigation.navigate('WorkerDashboard')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ManagerDashboard')}>
           <FontAwesome name="home" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('WorkerAttendance')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ManagerAttendance')}>
           <FontAwesome name="calendar" size={24} color="white" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => navigation.navigate('WorkerProfile')}>
+        <TouchableOpacity onPress={() => navigation.navigate('ManagerProfile')}>
           <FontAwesome name="user" size={24} color="white" />
         </TouchableOpacity>
       </View>
